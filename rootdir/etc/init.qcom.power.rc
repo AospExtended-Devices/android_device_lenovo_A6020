@@ -1,8 +1,6 @@
 on enable-low-power
     start qcom-mem
-
-    write /proc/sys/kernel/sched_boost 0
-
+    
     # RPS mask
     write /sys/class/net/rmnet0/queues/rx-0/rps_cpus 10
 
@@ -15,13 +13,11 @@ on enable-low-power
     write /proc/sys/kernel/sched_mostly_idle_load 50
     write /proc/sys/kernel/sched_mostly_idle_nr_run 3
 
-    write /proc/sys/kernel/sched_prefer_idle 0
-
-    write /sys/class/devfreq/cpubw/governor "bw_hwmon"
-    write /sys/class/devfreq/cpubw/bw_hwmon/io_percent 20
-    write /sys/class/devfreq/gpubw/governor "bw_hwmon"
-    write /sys/class/devfreq/gpubw/bw_hwmon/io_percent 40
-    write /sys/class/devfreq/mincpubw/governor "cpufreq"
+    write /sys/class/devfreq/qcom,cpubw.64/governor "bw_hwmon"
+    write /sys/class/devfreq/qcom,cpubw.64/bw_hwmon/io_percent 20
+    write /sys/class/devfreq/qcom,gpubw.61/governor "bw_hwmon"
+    write /sys/class/devfreq/qcom,gpubw.61/bw_hwmon/io_percent 40
+    write /sys/class/devfreq/qcom,mincpubw.65/governor "cpufreq"
 
     # Disable thermal core_control to update interactive gov settings
     write /sys/module/msm_thermal/core_control/enabled 0
@@ -40,26 +36,24 @@ on enable-low-power
     write /sys/devices/system/cpu/cpu0/cpufreq/interactive/timer_rate 20000
     write /sys/devices/system/cpu/cpu0/cpufreq/interactive/hispeed_freq 1113600
     write /sys/devices/system/cpu/cpu0/cpufreq/interactive/io_is_busy 0
-    write /sys/devices/system/cpu/cpu0/cpufreq/interactive/target_loads "1 800000:85 1113600:90 1344000:95"
+    write /sys/devices/system/cpu/cpu0/cpufreq/interactive/target_loads "800000:85 1113600:90 1344000:95"
     write /sys/devices/system/cpu/cpu0/cpufreq/interactive/min_sample_time 55000
-    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq 400000
-    
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq 533333
+
     # Enable governor for power cluster
     write /sys/devices/system/cpu/cpu4/online 1
     write /sys/devices/system/cpu/cpu4/cpufreq/scaling_governor "interactive"
     restorecon_recursive /sys/devices/system/cpu # must restore after interactive
     write /sys/devices/system/cpu/cpufreq/interactive/above_hispeed_delay "25000 1094400:50000 1152000:12500"
-    write /sys/devices/system/cpu/cpu4/cpufreq/interactive/go_hispeed_load 87
+    write /sys/devices/system/cpu/cpu4/cpufreq/interactive/go_hispeed_load 90
     write /sys/devices/system/cpu/cpu4/cpufreq/interactive/timer_rate 40000
     write /sys/devices/system/cpu/cpu4/cpufreq/interactive/hispeed_freq 998400
     write /sys/devices/system/cpu/cpu4/cpufreq/interactive/io_is_busy 0
-    write /sys/devices/system/cpu/cpu4/cpufreq/interactive/target_loads "1 800000:95"
+    write /sys/devices/system/cpu/cpu4/cpufreq/interactive/target_loads 90
     write /sys/devices/system/cpu/cpu4/cpufreq/interactive/min_sample_time 45000
-    write /sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq 400000
-
-    # Enable thermal core_control now
-    write /sys/module/msm_thermal/core_control/enabled 1
-
+    write /sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq 800000
+    write /sys/devices/system/cpu/cpu4/cpufreq/interactive/max_freq_hysteresis 60000
+    
     # Enable core control
     write /sys/devices/system/cpu/cpu0/core_ctl/min_cpus 2
     write /sys/devices/system/cpu/cpu0/core_ctl/max_cpus 4
@@ -73,19 +67,15 @@ on enable-low-power
     write /sys/devices/system/cpu/cpu4/core_ctl/offline_delay_ms 5000
     write /sys/devices/system/cpu/cpu4/core_ctl/not_preferred 1
 
+     # Enable thermal core_control now
+    write /sys/module/msm_thermal/core_control/enabled 1
+ 
     # HMP scheduler (big.Little cluster related) settings
-    write /proc/sys/kernel/sched_upmigrate 60
-    write /proc/sys/kernel/sched_downmigrate 35
-	
-    # Enable sched guided freq control
-    write /sys/devices/system/cpu/cpu0/cpufreq/interactive/use_sched_load 1
-    write /sys/devices/system/cpu/cpu0/cpufreq/interactive/use_migration_notif 1
-    write /sys/devices/system/cpu/cpu4/cpufreq/interactive/use_sched_load 1
-    write /sys/devices/system/cpu/cpu4/cpufreq/interactive/use_migration_notif 1
-    write /proc/sys/kernel/sched_freq_inc_notify 50000
-    write /proc/sys/kernel/sched_freq_dec_notify 50000
+    write /proc/sys/kernel/sched_boost 0
+    write /proc/sys/kernel/sched_upmigrate 95
+    write /proc/sys/kernel/sched_downmigrate 85
 
-    # Bring up all cores online
+    # Bring all CPUs online
     write /sys/devices/system/cpu/cpu1/online 1
     write /sys/devices/system/cpu/cpu2/online 1
     write /sys/devices/system/cpu/cpu3/online 1
@@ -107,7 +97,7 @@ on enable-low-power
     chown system system /dev/cpuset/camera-daemon/tasks
     chmod 0664 /dev/cpuset/camera-daemon/tasks
 
-    # Configure foreground and background cpusets
+    # Update foreground and background cpusets
     # Reserve CPU 7 for the top app
     write /dev/cpuset/foreground/cpus 0-6
     write /dev/cpuset/foreground/boost/cpus 0-3
@@ -116,14 +106,11 @@ on enable-low-power
     write /dev/cpuset/top-app/cpus 0-7
     write /dev/cpuset/camera-daemon/cpus 4-7
 
-    setprop ro.min_freq_0 200000
-    setprop ro.min_freq_4 200000
-
 on charger
     write /sys/module/lpm_levels/parameters/sleep_disabled 0
     write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor "powersave"
 
-on class_start:late_start
+on property:sys.boot_completed=1
     trigger enable-low-power
 
 on property:init.svc.recovery=running
