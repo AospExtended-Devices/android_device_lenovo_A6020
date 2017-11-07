@@ -1,13 +1,11 @@
 # system.prop for A6020
 
 # Audio
-ro.qc.sdk.audio.fluencetype=fluencepro
-ro.qc.sdk.audio.ssr=true
-persist.audio.fluence.mode=endfire
+ro.qc.sdk.audio.fluencetype=none
+ro.qc.sdk.audio.ssr=false
 persist.audio.fluence.voicecall=true
 persist.audio.fluence.voicerec=true
 persist.audio.fluence.speaker=false
-ro.ril.enable.amr.wideband=1
 use.voice.path.for.pcm.voip=true
 vidc.enc.narrow.searchrange=1
 
