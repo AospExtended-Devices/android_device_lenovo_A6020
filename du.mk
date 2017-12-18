@@ -15,14 +15,12 @@
 $(call inherit-product, device/lenovo/A6020/full_A6020.mk)
 
 # Inherit some common AEX stuff.
-$(call inherit-product, vendor/aosp/common.mk)
+$(call inherit-product, vendor/du/config/common_full_phone.mk)
 
 #Bootanimation res
 TARGET_BOOT_ANIMATION_RES := 1080
 
 ## Device identifier. This must come after all inclusions
 PRODUCT_DEVICE := A6020
-PRODUCT_NAME := aosp_A6020
-
-EXTENDED_BUILD_TYPE=OFFICIAL
+PRODUCT_NAME := du_A6020
 
